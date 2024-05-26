@@ -12,7 +12,6 @@ public class StoplightFSM {
     
     public StoplightFSM(StoplightFSMSettings settings) {
         this.settings = settings;
-        currentStateProperty.set(new StoplightState(settings.getNext()));
     }
     
     public void setEnabled() {
@@ -24,13 +23,15 @@ public class StoplightFSM {
         isDisabled = true;
     }
     
-    public void update () {
+    public void update(long tick) {
         if (isDisabled) return;
+        if (currentStateProperty.getValue() == null)
+            currentStateProperty.set(new StoplightState(settings.getFirst()));
         
         var currentState = currentStateProperty.getValue();
-        currentState.update();
+        currentState.update(tick);
         if (!currentState.isEnd()) return;
-        var newState = new StoplightState(settings.getNext(currentState.getData()));
+        var newState = new StoplightState(settings.getFirst(currentState.getData()));
         currentStateProperty.set(newState);
     }
     

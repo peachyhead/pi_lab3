@@ -2,7 +2,7 @@ package stoplight;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.ArrayList;
+import java.time.Duration;
 
 public class StoplightInstaller {
 
@@ -13,14 +13,14 @@ public class StoplightInstaller {
         
         var settings = getSettings();
         var model = new StoplightModel(settings);
-        var presenter = new StoplightPresenter(model);
-        
         var consts = new GridBagConstraints();
         consts.fill = GridBagConstraints.BOTH;
         consts.insets = new Insets(5, 5, 5, 5);
         consts.weightx = 0.8;
         consts.weighty = 1;
         consts.anchor  = GridBagConstraints.CENTER;
+        
+        var presenter = new StoplightPresenter(model);
         frame.getContentPane().add(presenter, consts);
 
         var infoPanel = setupInfoPanel(model);
@@ -30,6 +30,20 @@ public class StoplightInstaller {
         
         frame.revalidate();
         presenter.initialize();
+        model.disable();
+    }
+    
+    private static StoplightFSMSettings getSettings() {
+        return new StoplightFSMSettings(
+                new StoplightStateData(Duration.ofMillis(0), Color.yellow, 2, StoplightVisualType.Blink),
+                new StoplightStateData[] {
+                        new StoplightStateData(Duration.ofMillis(5000), Color.red, 1, StoplightVisualType.Simple),
+                        new StoplightStateData(Duration.ofMillis(5000), Color.yellow, 2, StoplightVisualType.Simple),
+                        new StoplightStateData(Duration.ofMillis(2000), Color.green, 3, StoplightVisualType.Simple),
+                        new StoplightStateData(Duration.ofMillis(2000), Color.green, 3, StoplightVisualType.Blink),
+                        new StoplightStateData(Duration.ofMillis(5000), Color.yellow, 2, StoplightVisualType.Simple)
+                }
+        );
     }
 
     private static JPanel setupInfoPanel(StoplightModel model) {
@@ -71,7 +85,7 @@ public class StoplightInstaller {
                 textUpdate.stop();
             textUpdate = new Timer(1, ignored -> {
                 stateInfo.setText("State: " + state.getData().toString());
-                remainingInfo.setText("Remaining: " + state.getRemaining());
+                remainingInfo.setText("Remaining: " + secondsToString(state.getRemaining()));
             });
             textUpdate.start();
         });
@@ -79,16 +93,8 @@ public class StoplightInstaller {
         return infoPanel;
     }
 
-    private static StoplightFSMSettings getSettings() {
-        return new StoplightFSMSettings(
-                new StoplightStateData(0, Color.yellow, 2, StoplightVisualType.Blink),
-                new StoplightStateData[] {
-                        new StoplightStateData(500, Color.red, 1, StoplightVisualType.Simple),
-                        new StoplightStateData(500, Color.yellow, 2, StoplightVisualType.Simple),
-                        new StoplightStateData(200, Color.green, 3, StoplightVisualType.Simple),
-                        new StoplightStateData(200, Color.green, 3, StoplightVisualType.Blink),
-                        new StoplightStateData(500, Color.yellow, 2, StoplightVisualType.Simple)
-                }
-        );
+    private static String secondsToString(Duration duration) {
+        return String.format("%02d:%02d",
+                duration.toSecondsPart(), duration.toMillis() % 1000 / 10);
     }
 }

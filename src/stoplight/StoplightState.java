@@ -2,24 +2,26 @@ package stoplight;
 
 import lombok.Getter;
 
+import java.time.Duration;
+
 public class StoplightState {
     
     @Getter private final StoplightStateData data;
-    @Getter private int accumulated;
+    @Getter private long accumulated;
 
     public StoplightState(StoplightStateData data) {
         this.data = data;
     }
 
-    public void update () {
-        accumulated += 1;
+    public void update(long tick) {
+        accumulated += tick;
     }
     
     public boolean isEnd() {
-        return accumulated >= data.getDuration();
+        return getRemaining().isNegative();
     }
     
-    public int getRemaining() {
-        return data.getDuration() - accumulated;
+    public Duration getRemaining() {
+        return data.getDuration().minus(Duration.ofMillis(accumulated));
     }
 }

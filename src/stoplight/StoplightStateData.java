@@ -4,15 +4,16 @@ import lombok.Getter;
 
 import java.awt.*;
 import java.text.MessageFormat;
+import java.time.Duration;
 
 public class StoplightStateData {
     
-    @Getter private final int duration;
+    @Getter private final Duration duration;
     @Getter private final int key;
     @Getter private final Color color;
     @Getter private final StoplightVisualType type;
 
-    public StoplightStateData(int duration, Color color, 
+    public StoplightStateData(Duration duration, Color color,
                               int key, StoplightVisualType type) {
         this.duration = duration;
         this.color = color;

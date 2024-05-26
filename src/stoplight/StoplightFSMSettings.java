@@ -15,14 +15,14 @@ public class StoplightFSMSettings {
         this.stateDataList.addAll(List.of(stateData));
     }
     
-    public StoplightStateData getNext() {
+    public StoplightStateData getFirst() {
         return stateDataList.getFirst();
     }
     
-    public StoplightStateData getNext(StoplightStateData currentData) {
+    public StoplightStateData getFirst(StoplightStateData currentData) {
         var currentIndex = stateDataList.indexOf(currentData);
         return currentIndex == stateDataList.size() - 1 
-                ? getNext()
+                ? getFirst()
                 : stateDataList.get(currentIndex + 1);
     }
 }
