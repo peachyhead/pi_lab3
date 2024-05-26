@@ -14,7 +14,7 @@ public class StoplightModel {
     
     public void enable() {
         updateThread = new Thread(() -> {
-            while (true) {
+            while (!Thread.currentThread().isInterrupted()) {
                 var currentTime = System.currentTimeMillis();
                 var delta = currentTime - cachedTime;
                 cachedTime = currentTime;
@@ -22,7 +22,6 @@ public class StoplightModel {
             }
         });
         updateThread.start();
-        stateMachine.setEnabled();
     }
     
     public void disable() {

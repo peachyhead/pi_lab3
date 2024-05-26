@@ -10,7 +10,6 @@ public class StoplightInstaller {
     private static Timer textUpdate;
 
     public static void install(JFrame frame) {
-        
         var settings = getSettings();
         var model = new StoplightModel(settings);
         var consts = new GridBagConstraints();
@@ -35,15 +34,20 @@ public class StoplightInstaller {
     
     private static StoplightFSMSettings getSettings() {
         return new StoplightFSMSettings(
-                new StoplightStateData(Duration.ofMillis(0), Color.yellow, 2, StoplightVisualType.Blink),
+                getStateData(0, Color.yellow, 2, StoplightVisualType.Blink),
                 new StoplightStateData[] {
-                        new StoplightStateData(Duration.ofMillis(5000), Color.red, 1, StoplightVisualType.Simple),
-                        new StoplightStateData(Duration.ofMillis(5000), Color.yellow, 2, StoplightVisualType.Simple),
-                        new StoplightStateData(Duration.ofMillis(2000), Color.green, 3, StoplightVisualType.Simple),
-                        new StoplightStateData(Duration.ofMillis(2000), Color.green, 3, StoplightVisualType.Blink),
-                        new StoplightStateData(Duration.ofMillis(5000), Color.yellow, 2, StoplightVisualType.Simple)
+                        getStateData(5000, Color.red, 1, StoplightVisualType.Simple),
+                        getStateData(5000, Color.yellow, 2, StoplightVisualType.Simple),
+                        getStateData(2000, Color.green, 3, StoplightVisualType.Simple),
+                        getStateData(2000, Color.green, 3, StoplightVisualType.Blink),
+                        getStateData(5000, Color.yellow, 2, StoplightVisualType.Simple)
                 }
         );
+    }
+    
+    private static StoplightStateData getStateData(int duration, Color color, int key,
+                                                   StoplightVisualType visualType) {
+        return new StoplightStateData(Duration.ofMillis(duration), color, key, visualType);
     }
 
     private static JPanel setupInfoPanel(StoplightModel model) {
@@ -56,17 +60,37 @@ public class StoplightInstaller {
         consts.gridy = 0;
         consts.gridx = 0;
 
+        setupFields(model, infoPanel, consts);
+        setupToggle(model, infoPanel, consts);
+        return infoPanel;
+    }
+
+    private static void setupFields(StoplightModel model, JPanel infoPanel, GridBagConstraints consts) {
         var stateInfo = new JLabel("State info:");
         stateInfo.setFont(regularFont);
         stateInfo.setPreferredSize(new Dimension(300, 30));
         infoPanel.add(stateInfo, consts);
 
-        consts.gridy += 1;
         var remainingInfo = new JLabel("Remains:");
         remainingInfo.setFont(regularFont);
         remainingInfo.setPreferredSize(new Dimension(300, 30));
+
+        model.subscribe(evt -> {
+            var state = (StoplightState) evt.getNewValue();
+            if (textUpdate != null) textUpdate.stop();
+            textUpdate = new Timer(1, ignored -> {
+                stateInfo.setText("State: " + state.getData().toString());
+                remainingInfo.setText("Remaining: " + secondsToString(state.getRemaining()));
+            });
+            textUpdate.start();
+        });
+
+        consts.gridy += 1;
         infoPanel.add(remainingInfo, consts);
-        
+    }
+
+    private static void setupToggle(StoplightModel model, JPanel infoPanel, 
+                                    GridBagConstraints consts) {
         consts.gridy += 1;
         var toggle = new JToggleButton("Enable stoplight");
         toggle.addActionListener(evt -> {
@@ -78,19 +102,6 @@ public class StoplightInstaller {
             toggle.setText(toggle.isSelected() ? "Disable stoplight" : "Enable stoplight");
         });
         infoPanel.add(toggle, consts);
-        
-        model.subscribe(evt -> {
-            var state = (StoplightState) evt.getNewValue();
-            if (textUpdate != null)
-                textUpdate.stop();
-            textUpdate = new Timer(1, ignored -> {
-                stateInfo.setText("State: " + state.getData().toString());
-                remainingInfo.setText("Remaining: " + secondsToString(state.getRemaining()));
-            });
-            textUpdate.start();
-        });
-        
-        return infoPanel;
     }
 
     private static String secondsToString(Duration duration) {
